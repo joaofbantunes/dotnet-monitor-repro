@@ -1,0 +1,15 @@
+{
+    "$schema": "https://aka.ms/dotnet-monitor-schema",
+    "DefaultProcess": {
+        "Filters": [{
+            "Key": "ProcessName",
+            "Value": "Api"
+        }]
+    },
+    "Metrics": {
+        "Providers": [{
+            "ProviderName": "Microsoft-AspNetCore-Server-Kestrel",
+            "MetricType": "All"
+        }]
+    }
+}

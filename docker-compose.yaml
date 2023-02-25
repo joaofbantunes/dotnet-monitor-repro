@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./src/Api/Dockerfile
+    image: dotnet-monitor-repro/api:latest
+    container_name: api
+    ports:
+      - "6000:80"
+    environment:
+      ASPNETCORE_URLS: "http://+:80"
+    volumes:
+      - api-stats:/tmp
+  api-monitor:
+    image: mcr.microsoft.com/dotnet/monitor:latest
+    container_name: api-monitor
+    command: collect --urls "http://*:80" --no-auth
+    environment:
+      DotnetMonitor_Metrics__Providers__0__ProviderName: "Microsoft-AspNetCore-Server-Kestrel"
+    ports:
+      - "6001:80"
+    depends_on:
+      - api
+    volumes:
+      - api-stats:/tmp
+  worker:
+    build:
+      context: .
+      dockerfile: ./src/Worker/Dockerfile
+    image: dotnet-monitor-repro/worker:latest
+    container_name: worker
+    ports:
+      - "6002:80"
+    environment:
+      ApiBaseUri: "http://api:80"
+      ASPNETCORE_URLS: "http://+:80"
+    depends_on:
+      - api
+    volumes:
+      - worker-stats:/tmp
+  worker-monitor:
+    image: mcr.microsoft.com/dotnet/monitor:latest
+    container_name: worker-monitor
+    command: collect --urls "http://*:80" --no-auth
+    environment:
+      DotnetMonitor_Metrics__Providers__0__ProviderName: "System.Net.Http"
+    ports:
+      - "6003:80"
+    depends_on:
+      - worker
+    volumes:
+      - worker-stats:/tmp
+
+volumes:
+  api-stats:
+  worker-stats:
